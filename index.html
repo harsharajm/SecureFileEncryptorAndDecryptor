@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure File Encryptor & Decryptor</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo="> 
+</head>
+<body>
+  <div class="theme-toggle">
+    <button id="themeToggle" aria-label="Toggle theme">🌙</button>
+  </div>
+
+  <div class="container">
+    <h1>Secure File Encryptor</h1>
+    <div class="form">
+      <div class="file-input-group">  
+        <label for="fileInput">Choose File:</label>
+        <input type="file" id="fileInput" />
+        <div id="fileInfo" class="file-info"></div>
+      </div>
+      
+      <div class="password-group">
+        <label for="keyInput">Passphrase:</label>
+        <input type="password" id="keyInput" placeholder="Minimum 8 characters" />
+        <div id="passwordStrength" class="password-strength">
+          <div class="strength-bar"></div>
+        </div>
+      </div>
+
+      <select id="action">
+        <option value="encrypt">Encrypt</option>
+        <option value="decrypt">Decrypt</option>
+      </select>
+
+      <button id="actionButton" class="">
+        <span class="button-text">Start</span>
+        <div class="loading"></div>
+      </button>
+
+      <div id="statusMessage" class="status-message"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
