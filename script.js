@@ -1,9 +1,10 @@
 const Security = {
-  iterations: 100000,
-  keySize: 256 / 32,
-  saltSize: 128 / 8,
-  ivSize: 128 / 8,
+  iterations: 100000, // PBKDF2 iterations for key derivation
+  keySize: 256 / 32, // AES key size (256 bits)
+  saltSize: 128 / 8, // Salt size in bytes
+  ivSize: 128 / 8, // Initialization vector (IV) size in bytes
 
+  // Generate a key using PBKDF2
   generateKey: (password, salt) => {
     return CryptoJS.PBKDF2(password, salt, {
       keySize: Security.keySize,
@@ -11,6 +12,7 @@ const Security = {
     });
   },
 
+  // Convert ArrayBuffer to CryptoJS WordArray
   arrayBufferToWordArray: (buffer) => {
     const bytes = new Uint8Array(buffer);
     const words = [];
@@ -20,6 +22,7 @@ const Security = {
     return CryptoJS.lib.WordArray.create(words, bytes.length);
   },
 
+  // Convert CryptoJS WordArray to ArrayBuffer
   wordArrayToArrayBuffer: (wordArray) => {
     const bytes = new Uint8Array(wordArray.sigBytes);
     for (let i = 0; i < wordArray.sigBytes; i++) {
@@ -30,6 +33,7 @@ const Security = {
 };
 
 class FileProcessor {
+  // Encrypt file with AES
   static async encrypt(file, password) {
     const spinner = document.getElementById("actionButton");
     const salt = CryptoJS.lib.WordArray.random(Security.saltSize);
@@ -40,6 +44,7 @@ class FileProcessor {
     const wordArray = Security.arrayBufferToWordArray(fileBuffer);
     const encrypted = CryptoJS.AES.encrypt(wordArray, key, { iv });
 
+    // Combine salt, IV, and ciphertext
     const combined = CryptoJS.lib.WordArray.create()
       .concat(salt)
       .concat(iv)
@@ -51,11 +56,13 @@ class FileProcessor {
     });
   }
 
+  // Decrypt file with AES
   static async decrypt(file, password) {
     const spinner = document.getElementById("actionButton");
     const buffer = await file.arrayBuffer();
     const encryptedData = Security.arrayBufferToWordArray(buffer);
 
+    // Extract salt, IV, and ciphertext
     const salt = CryptoJS.lib.WordArray.create(
       encryptedData.words.slice(0, Security.saltSize / 4)
     );
@@ -82,6 +89,7 @@ class FileProcessor {
 }
 
 const UI = {
+  // Display status messages to the user
   showStatus(message, isError = false) {
     const status = document.getElementById("statusMessage");
     status.textContent = message;
@@ -89,37 +97,43 @@ const UI = {
     setTimeout(() => status.classList.remove("visible"), 5000);
   },
 
+  // Toggle loading state for the action button
   toggleLoading(show) {
     const button = document.getElementById("actionButton");
     button.classList.toggle("processing", show);
   },
 
+  // Update file information in the UI
   updateFileInfo(file) {
     const fileInfo = document.getElementById("fileInfo");
     fileInfo.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
   },
 
+  // Update password strength indicator
   updatePasswordStrength(password) {
     const strength = Math.min(password.length / 12, 1);
     const bar = document.querySelector(".strength-bar");
     bar.style.width = `${strength * 100}%`;
     bar.style.backgroundColor =
       strength > 0.7
-        ? "var(--success-color)"
+        ? "var(--success-color)" // Green for strong passwords
         : strength > 0.4
-        ? "#ffd60a"
-        : "var(--error-color)";
+        ? "#ffd60a" // Yellow for moderate passwords
+        : "var(--error-color)"; // Red for weak passwords
   },
 };
 
+// Event listener for file selection
 document.getElementById("fileInput").addEventListener("change", (e) => {
   if (e.target.files[0]) UI.updateFileInfo(e.target.files[0]);
 });
 
+// Event listener for password input
 document.getElementById("keyInput").addEventListener("input", (e) => {
   UI.updatePasswordStrength(e.target.value);
 });
 
+// Event listener for encrypt/decrypt button
 document.getElementById("actionButton").addEventListener("click", async () => {
   const fileInput = document.getElementById("fileInput");
   const keyInput = document.getElementById("keyInput");
@@ -145,6 +159,7 @@ document.getElementById("actionButton").addEventListener("click", async () => {
         ? await FileProcessor.encrypt(file, password)
         : await FileProcessor.decrypt(file, password);
 
+    // Determine file extension for download
     const ext =
       action === "encrypt"
         ? ".encrypted"
@@ -157,13 +172,13 @@ document.getElementById("actionButton").addEventListener("click", async () => {
 
     UI.showStatus(`File ${action}ed successfully! Downloading...`);
   } catch (error) {
-    console.error(error);
-    UI.showStatus(`Error: ${error.message || "Invalid passphrase or file"}`, true);
+    UI.showStatus("Error: Invalid passphrase or file", true);
   } finally {
     UI.toggleLoading(false);
   }
 });
 
+// Theme toggle button functionality
 document.getElementById("themeToggle").addEventListener("click", () => {
   document.body.classList.toggle("dark-mode");
   const isDark = document.body.classList.contains("dark-mode");
